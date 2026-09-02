@@ -13,29 +13,31 @@
         <span>ЦОД · Учёт оборудования</span>
     </header>
 
-    <form class="filter-form" action="/devices" method="GET">
-        <input type="number" name="power" min="0" placeholder="Мин. мощность, Вт" value="{{.power}}">
-        <button type="submit">Найти</button>
-    </form>
+    <div class="screen-content">
+        <form class="filter-form" action="/devices" method="GET">
+            <input type="number" name="power" min="0" placeholder="Мин. мощность, Вт" value="{{.power}}">
+            <button type="submit">Найти</button>
+        </form>
 
-    {{if .devices}}
-    <div class="device-grid">
-        {{range .devices}}
-        <a class="device-card" href="/feed/{{.ID}}">
-            <img src="{{.ImageURL}}" alt="{{.Name}}">
-            <div class="info">
-                <div class="name">{{.Name}}</div>
-                <div class="meta">
-                    <span>❤ {{.LikesCount}}</span>
-                    <span class="power">{{.PowerConsumptionW}} Вт</span>
+        {{if .devices}}
+        <div class="device-grid">
+            {{range .devices}}
+            <a class="device-card" href="/feed/{{.ID}}">
+                <img src="{{.ImageURL}}" alt="{{.Name}}">
+                <div class="info">
+                    <div class="name">{{.Name}}</div>
+                    <div class="meta">
+                        <span>❤ {{.LikesCount}}</span>
+                        <span class="power">{{.PowerConsumptionW}} Вт</span>
+                    </div>
                 </div>
-            </div>
-        </a>
+            </a>
+            {{end}}
+        </div>
+        {{else}}
+        <p class="empty">Оборудование не найдено</p>
         {{end}}
     </div>
-    {{else}}
-    <p class="empty">Оборудование не найдено</p>
-    {{end}}
 
     {{template "nav" .}}
 </div>

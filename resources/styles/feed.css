@@ -1,6 +1,6 @@
 .feed-frame {
   position: relative;
-  height: calc(100vh - 76px);
+  flex: 1;
   background: #000;
   overflow: hidden;
 }

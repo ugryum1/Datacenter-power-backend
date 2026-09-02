@@ -13,45 +13,47 @@
         <span>ЦОД · Черновик оборудования</span>
     </header>
 
-    <form action="/add" method="GET">
-        <section class="add-section add-preview">
-            <h2>Изображение и видео</h2>
-            <img src="{{.device.ImageURL}}" alt="{{.device.Name}}">
-            <div class="add-field">
-                <label>Файл изображения</label>
-                <input type="text" value="{{.device.ImageURL}}" readonly>
-            </div>
-            <div class="add-field">
-                <label>Файл видео</label>
-                <input type="text" value="{{.device.VideoURL}}" readonly>
-            </div>
-        </section>
+    <div class="screen-content">
+        <form action="/add" method="GET">
+            <section class="add-section add-preview">
+                <h2>Изображение и видео</h2>
+                <img src="{{.device.ImageURL}}" alt="{{.device.Name}}">
+                <div class="add-field">
+                    <label>Файл изображения</label>
+                    <input type="text" value="{{.device.ImageURL}}" readonly>
+                </div>
+                <div class="add-field">
+                    <label>Файл видео</label>
+                    <input type="text" value="{{.device.VideoURL}}" readonly>
+                </div>
+            </section>
 
-        <section class="add-section">
-            <h2>Название и описание</h2>
-            <div class="add-field">
-                <label>Название устройства</label>
-                <input type="text" name="name" value="{{.device.Name}}">
-            </div>
-            <div class="add-field">
-                <label>Краткое описание</label>
-                <textarea name="short_description" rows="3">{{.device.ShortDescription}}</textarea>
-            </div>
-        </section>
+            <section class="add-section">
+                <h2>Название и описание</h2>
+                <div class="add-field">
+                    <label>Название устройства</label>
+                    <input type="text" name="name" value="{{.device.Name}}">
+                </div>
+                <div class="add-field">
+                    <label>Краткое описание</label>
+                    <textarea name="short_description" rows="3">{{.device.ShortDescription}}</textarea>
+                </div>
+            </section>
 
-        <section class="add-section">
-            <h2>Поля по теме</h2>
-            <div class="add-field">
-                <label>Потребляемая мощность, Вт</label>
-                <input type="number" name="power" value="{{.device.PowerConsumptionW}}">
-            </div>
-            <div class="add-field">
-                <label>Тепловыделение, БТЕ/ч</label>
-                <input type="number" name="heat" value="{{.device.HeatDissipationBTU}}">
-            </div>
-            <button class="btn-publish" type="submit">Опубликовать</button>
-        </section>
-    </form>
+            <section class="add-section">
+                <h2>Поля по теме</h2>
+                <div class="add-field">
+                    <label>Потребляемая мощность, Вт</label>
+                    <input type="number" name="power" value="{{.device.PowerConsumptionW}}">
+                </div>
+                <div class="add-field">
+                    <label>Тепловыделение, БТЕ/ч</label>
+                    <input type="number" name="heat" value="{{.device.HeatDissipationBTU}}">
+                </div>
+                <button class="btn-publish" type="submit">Опубликовать</button>
+            </section>
+        </form>
+    </div>
 
     {{template "nav" .}}
 </div>
