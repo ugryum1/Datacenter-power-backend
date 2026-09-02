@@ -1,0 +1,11 @@
+# Локальные секреты
+.env
+
+# Бинарники Go
+/datacenter-power
+
+# Логи
+*.log
+
+# OS
+.DS_Store
