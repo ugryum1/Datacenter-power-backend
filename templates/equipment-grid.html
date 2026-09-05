@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оборудование ЦОД — Плитка</title>
+    <link rel="stylesheet" href="/static/styles/dc-base.css">
+    <link rel="stylesheet" href="/static/styles/equipment-grid.css">
+</head>
+<body>
+<div class="dc-screen">
+    <header class="dc-topbar">
+        <span>ЦОД · Учёт оборудования</span>
+    </header>
+
+    <div class="dc-screen-body">
+        <form class="power-filter" action="/dc-equipment" method="GET">
+            <div class="power-filter__head">
+                <span>Мощность от</span>
+                <b>{{.powerFilterW}} Вт</b>
+            </div>
+            <input type="range" name="power" min="0" max="{{.powerLimitW}}" step="{{.powerStepW}}" value="{{.powerFilterW}}">
+            <div class="power-filter__scale">
+                <span>0 Вт</span>
+                <span>{{.powerLimitW}} Вт</span>
+            </div>
+            <button type="submit">Показать</button>
+        </form>
+
+        {{if .equipmentList}}
+        <div class="equipment-grid">
+            {{range .equipmentList}}
+            <a class="equipment-card" href="/dc-equipment/reel/{{.ID}}">
+                <img src="{{.ImageURL}}" alt="{{.Name}}">
+                <div class="info">
+                    <div class="name">{{.Name}}</div>
+                    <div class="meta">
+                        <span>❤ {{.LikesCount}}</span>
+                        <span class="power">{{.PowerConsumptionW}} Вт</span>
+                    </div>
+                </div>
+            </a>
+            {{end}}
+        </div>
+        {{else}}
+        <p class="dc-empty">Оборудование не найдено</p>
+        {{end}}
+    </div>
+
+    {{template "dcnav" .}}
+</div>
+</body>
+</html>

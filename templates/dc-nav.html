@@ -1,0 +1,16 @@
+{{define "dcnav"}}
+<nav class="dc-tabbar">
+    <a href="/dc-equipment/reel/{{.reelStartID}}" class="{{if eq .activeTab "reel"}}active{{end}}">
+        <span class="icon">▶</span>
+        Лента
+    </a>
+    <a href="/dc-equipment/draft" class="{{if eq .activeTab "draft"}}active{{end}}">
+        <span class="icon">+</span>
+        Добавление
+    </a>
+    <a href="/dc-equipment" class="{{if eq .activeTab "grid"}}active{{end}}">
+        <span class="icon">▦</span>
+        Плитка
+    </a>
+</nav>
+{{end}}

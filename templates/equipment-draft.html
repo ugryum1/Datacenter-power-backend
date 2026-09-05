@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление оборудования ЦОД</title>
+    <link rel="stylesheet" href="/static/styles/dc-base.css">
+    <link rel="stylesheet" href="/static/styles/equipment-draft.css">
+</head>
+<body>
+<div class="dc-screen">
+    <header class="dc-topbar">
+        <span>ЦОД · Черновик оборудования</span>
+    </header>
+
+    <div class="dc-screen-body">
+        <section class="draft-section">
+            <h2>Медиафайлы устройства</h2>
+            <div class="draft-media">
+                <img src="{{.equipment.ImageURL}}" alt="{{.equipment.Name}}">
+                <div class="draft-media__actions">
+                    <button type="button" class="draft-upload">
+                        <span class="icon">🖼</span>
+                        Добавить фото
+                    </button>
+                    <button type="button" class="draft-upload">
+                        <span class="icon">🎬</span>
+                        Добавить видео
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="draft-section">
+            <h2>Название и описание</h2>
+            <div class="draft-field">
+                <label for="draft-name">Название устройства</label>
+                <input id="draft-name" type="text" name="name" value="{{.equipment.Name}}">
+            </div>
+            <div class="draft-field">
+                <label for="draft-description">Краткое описание</label>
+                <textarea id="draft-description" name="short_description" rows="5">{{.equipment.ShortDescription}}</textarea>
+            </div>
+        </section>
+
+        <section class="draft-section">
+            <h2>Энергопотребление устройства</h2>
+            <div class="draft-field">
+                <label for="draft-power">Потребляемая мощность, Вт</label>
+                <input id="draft-power" type="number" name="power" value="{{.equipment.PowerConsumptionW}}">
+            </div>
+            <div class="draft-field">
+                <label for="draft-heat">Тепловыделение, БТЕ/ч</label>
+                <input id="draft-heat" type="number" name="heat" value="{{.equipment.HeatDissipationBTU}}">
+            </div>
+        </section>
+    </div>
+
+    {{template "dcnav" .}}
+</div>
+</body>
+</html>

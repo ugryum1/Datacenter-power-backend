@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .equipment}}{{.equipment.Name}}{{else}}Лента{{end}} — Оборудование ЦОД</title>
+    <link rel="stylesheet" href="/static/styles/dc-base.css">
+    <link rel="stylesheet" href="/static/styles/equipment-reel.css">
+</head>
+<body>
+<div class="dc-screen">
+    <header class="dc-topbar">
+        <span>ЦОД · Лента оборудования</span>
+    </header>
+
+    <div class="dc-screen-body">
+        {{if .error}}
+        <p class="dc-empty">{{.error}}</p>
+        {{else}}
+        <div class="reel-stage">
+            <video src="{{.equipment.VideoURL}}" autoplay loop muted playsinline></video>
+
+            <aside class="reel-side">
+                <div class="reel-action reel-action--like">
+                    <span class="reel-action__circle"><span class="heart">❤</span></span>
+                    <span class="reel-action__label">{{.likesCount}}</span>
+                </div>
+
+                <div class="reel-specs">
+                    <div class="reel-spec">
+                        <span class="reel-spec__label">Мощность</span>
+                        <span class="reel-spec__value">{{.equipment.PowerConsumptionW}} Вт</span>
+                    </div>
+                    <div class="reel-spec">
+                        <span class="reel-spec__label">Тепло&shy;выделение</span>
+                        <span class="reel-spec__value">{{.equipment.HeatDissipationBTU}} БТЕ/ч</span>
+                    </div>
+                </div>
+
+                <a class="reel-action reel-action--next" href="/dc-equipment/reel/{{.equipment.ID}}?next=true">
+                    <span class="reel-action__circle"><span class="arrow">▼</span></span>
+                    <span class="reel-action__label">Дальше</span>
+                </a>
+            </aside>
+
+            <div class="reel-caption">
+                <h1>{{.equipment.Name}}</h1>
+                <details class="reel-about">
+                    <summary>
+                        <span class="reel-about__text">{{.equipment.ShortDescription}}</span>
+                        <span class="reel-about__toggle"></span>
+                    </summary>
+                </details>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    {{template "dcnav" .}}
+</div>
+</body>
+</html>

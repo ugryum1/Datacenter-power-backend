@@ -10,81 +10,92 @@ import (
 	"datacenter-power/internal/app/repository"
 )
 
-type Handler struct {
-	Repository *repository.Repository
+const powerFilterStepW = 50
+
+type DatacenterDeviceHandler struct {
+	Repository *repository.DatacenterDeviceRepository
 }
 
-func NewHandler(r *repository.Repository) *Handler {
-	return &Handler{Repository: r}
+func NewDatacenterDeviceHandler(r *repository.DatacenterDeviceRepository) *DatacenterDeviceHandler {
+	return &DatacenterDeviceHandler{Repository: r}
 }
 
-func (h *Handler) GetTile(ctx *gin.Context) {
-	powerFilter := ctx.Query("power")
-	minPower := 0
-	if powerFilter != "" {
-		if v, err := strconv.Atoi(powerFilter); err == nil {
-			minPower = v
+func (h *DatacenterDeviceHandler) ShowEquipmentGrid(ctx *gin.Context) {
+	powerFilterW := 0
+	if raw := ctx.Query("power"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
+			powerFilterW = v
 		}
 	}
 
-	devices, err := h.Repository.GetDevices(minPower)
+	equipmentList, err := h.Repository.ListPublishedDevices(powerFilterW)
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	ctx.HTML(http.StatusOK, "tile.html", gin.H{
-		"active":    "tile",
-		"devices":   devices,
-		"power":     powerFilter,
-		"navFeedID": h.Repository.GetFirstPublishedID(),
+	ctx.HTML(http.StatusOK, "equipment-grid.html", gin.H{
+		"activeTab":     "grid",
+		"equipmentList": equipmentList,
+		"powerFilterW":  powerFilterW,
+		"powerLimitW":   h.powerSliderLimitW(),
+		"powerStepW":    powerFilterStepW,
+		"reelStartID":   h.Repository.FirstPublishedDeviceID(),
 	})
 }
 
-func (h *Handler) GetFeed(ctx *gin.Context) {
+func (h *DatacenterDeviceHandler) ShowEquipmentReel(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		logrus.Error(err)
-		ctx.HTML(http.StatusBadRequest, "feed.html", gin.H{
-			"active":    "feed",
-			"error":     "некорректный идентификатор устройства",
-			"navFeedID": h.Repository.GetFirstPublishedID(),
+		ctx.HTML(http.StatusBadRequest, "equipment-reel.html", gin.H{
+			"activeTab":   "reel",
+			"error":       "некорректный идентификатор устройства дата-центра",
+			"reelStartID": h.Repository.FirstPublishedDeviceID(),
 		})
 		return
 	}
 
-	var device repository.Device
+	var equipment repository.DatacenterDevice
 	if ctx.Query("next") == "true" {
-		device, err = h.Repository.GetNextDevice(id)
+		equipment, err = h.Repository.GetNextPublishedDevice(id)
 	} else {
-		device, err = h.Repository.GetDevice(id)
+		equipment, err = h.Repository.GetDeviceByID(id)
 	}
 	if err != nil {
 		logrus.Error(err)
-		ctx.HTML(http.StatusNotFound, "feed.html", gin.H{
-			"active":    "feed",
-			"error":     "устройство не найдено",
-			"navFeedID": h.Repository.GetFirstPublishedID(),
+		ctx.HTML(http.StatusNotFound, "equipment-reel.html", gin.H{
+			"activeTab":   "reel",
+			"error":       "устройство дата-центра не найдено",
+			"reelStartID": h.Repository.FirstPublishedDeviceID(),
 		})
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "feed.html", gin.H{
-		"active":    "feed",
-		"device":    device,
-		"likes":     device.LikesCount(),
-		"navFeedID": h.Repository.GetFirstPublishedID(),
+	ctx.HTML(http.StatusOK, "equipment-reel.html", gin.H{
+		"activeTab":   "reel",
+		"equipment":   equipment,
+		"likesCount":  equipment.LikesCount(),
+		"reelStartID": h.Repository.FirstPublishedDeviceID(),
 	})
 }
 
-func (h *Handler) GetAdd(ctx *gin.Context) {
-	draft, err := h.Repository.GetDraft()
+func (h *DatacenterDeviceHandler) ShowEquipmentDraft(ctx *gin.Context) {
+	draftEquipment, err := h.Repository.GetDraftDevice()
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	ctx.HTML(http.StatusOK, "add.html", gin.H{
-		"active":    "add",
-		"device":    draft,
-		"navFeedID": h.Repository.GetFirstPublishedID(),
+	ctx.HTML(http.StatusOK, "equipment-draft.html", gin.H{
+		"activeTab":   "draft",
+		"equipment":   draftEquipment,
+		"reelStartID": h.Repository.FirstPublishedDeviceID(),
 	})
+}
+
+func (h *DatacenterDeviceHandler) powerSliderLimitW() int {
+	maxPower := h.Repository.MaxPowerConsumptionW()
+	if maxPower == 0 {
+		return powerFilterStepW
+	}
+	return ((maxPower + powerFilterStepW - 1) / powerFilterStepW) * powerFilterStepW
 }

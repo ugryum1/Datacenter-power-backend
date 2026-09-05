@@ -13,20 +13,20 @@ import (
 func StartServer() {
 	log.Println("Server start up")
 
-	repo, err := repository.NewRepository()
+	deviceRepository, err := repository.NewDatacenterDeviceRepository()
 	if err != nil {
-		logrus.Fatal("ошибка инициализации репозитория: ", err)
+		logrus.Fatal("ошибка инициализации репозитория устройств дата-центра: ", err)
 	}
 
-	h := handler.NewHandler(repo)
+	deviceHandler := handler.NewDatacenterDeviceHandler(deviceRepository)
 
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 	r.Static("/static", "./resources")
 
-	r.GET("/devices", h.GetTile)
-	r.GET("/feed/:id", h.GetFeed)
-	r.GET("/add", h.GetAdd)
+	r.GET("/dc-equipment", deviceHandler.ShowEquipmentGrid)
+	r.GET("/dc-equipment/reel/:id", deviceHandler.ShowEquipmentReel)
+	r.GET("/dc-equipment/draft", deviceHandler.ShowEquipmentDraft)
 
 	if err := r.Run(); err != nil {
 		logrus.Error(err)

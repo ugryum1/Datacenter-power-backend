@@ -11,9 +11,9 @@ const (
 	StatusDeleted   = "deleted"
 )
 
-const mediaBaseURL = "http://localhost:9000/datacenter-media/"
+const equipmentMediaBaseURL = "http://localhost:9000/datacenter-media/"
 
-type Device struct {
+type DatacenterDevice struct {
 	ID                 int
 	Name               string
 	ShortDescription   string
@@ -25,24 +25,24 @@ type Device struct {
 	LikeUserIDs        []int64
 }
 
-func (d Device) LikesCount() int {
+func (d DatacenterDevice) LikesCount() int {
 	return len(d.LikeUserIDs)
 }
 
-type Repository struct {
-	devices []Device
+type DatacenterDeviceRepository struct {
+	datacenterDevices []DatacenterDevice
 }
 
-func NewRepository() (*Repository, error) {
-	return &Repository{
-		devices: []Device{
+func NewDatacenterDeviceRepository() (*DatacenterDeviceRepository, error) {
+	return &DatacenterDeviceRepository{
+		datacenterDevices: []DatacenterDevice{
 			{
 				ID:                 1,
 				Name:               "Dell PowerEdge R750",
-				ShortDescription:   "Стоечный сервер 2U для виртуализации и высоконагруженных сервисов дата-центра. Два процессора Intel Xeon Scalable, до 32 отсеков NVMe.",
+				ShortDescription:   "Стоечный сервер 2U для виртуализации и высоконагруженных сервисов дата-центра. Два процессора Intel Xeon Scalable, до 32 отсеков NVMe, резервируемые блоки питания и горячая замена дисков.",
 				Status:             StatusPublished,
-				ImageURL:           mediaBaseURL + "server-rack.jpg",
-				VideoURL:           mediaBaseURL + "fan-cooling-vertical.webm",
+				ImageURL:           equipmentMediaBaseURL + "server-rack.jpg",
+				VideoURL:           equipmentMediaBaseURL + "server-cpu-vertical.webm",
 				PowerConsumptionW:  800,
 				HeatDissipationBTU: 2730,
 				LikeUserIDs:        []int64{101, 102, 103},
@@ -50,10 +50,10 @@ func NewRepository() (*Repository, error) {
 			{
 				ID:                 2,
 				Name:               "Cisco Catalyst 9300",
-				ShortDescription:   "Коммутатор ядра сети дата-центра с поддержкой StackWise-480 и модульным блоком питания.",
+				ShortDescription:   "Коммутатор ядра сети дата-центра с поддержкой StackWise-480 и модульным блоком питания. Обеспечивает связность серверных стоек и агрегацию трафика.",
 				Status:             StatusPublished,
-				ImageURL:           mediaBaseURL + "switch.jpg",
-				VideoURL:           mediaBaseURL + "switch-panel-vertical.webm",
+				ImageURL:           equipmentMediaBaseURL + "switch.jpg",
+				VideoURL:           equipmentMediaBaseURL + "switch-panel-vertical.webm",
 				PowerConsumptionW:  350,
 				HeatDissipationBTU: 1194,
 				LikeUserIDs:        []int64{201, 202},
@@ -61,10 +61,10 @@ func NewRepository() (*Repository, error) {
 			{
 				ID:                 3,
 				Name:               "NetApp FAS8300",
-				ShortDescription:   "Система хранения данных (СХД) корпоративного класса с гибридными дисковыми полками.",
+				ShortDescription:   "Система хранения данных корпоративного класса с гибридными дисковыми полками. Обслуживает файловый и блочный доступ для серверов дата-центра.",
 				Status:             StatusPublished,
-				ImageURL:           mediaBaseURL + "storage.jpg",
-				VideoURL:           mediaBaseURL + "hdd-storage-vertical.webm",
+				ImageURL:           equipmentMediaBaseURL + "storage.jpg",
+				VideoURL:           equipmentMediaBaseURL + "hdd-storage-vertical.webm",
 				PowerConsumptionW:  1200,
 				HeatDissipationBTU: 4094,
 				LikeUserIDs:        []int64{301},
@@ -72,20 +72,20 @@ func NewRepository() (*Repository, error) {
 			{
 				ID:                 4,
 				Name:               "APC Smart-UPS SRT 10000VA",
-				ShortDescription:   "Источник бесперебойного питания для серверного зала с двойным преобразованием напряжения.",
+				ShortDescription:   "Источник бесперебойного питания для серверного зала с двойным преобразованием напряжения и батарейными модулями горячей замены.",
 				Status:             StatusDraft,
-				ImageURL:           mediaBaseURL + "ups.jpg",
-				VideoURL:           mediaBaseURL + "hdd-storage-vertical.webm",
+				ImageURL:           equipmentMediaBaseURL + "ups.jpg",
+				VideoURL:           equipmentMediaBaseURL + "fan-cooling-vertical.webm",
 				PowerConsumptionW:  900,
 				HeatDissipationBTU: 3071,
 			},
 			{
 				ID:                 5,
 				Name:               "Stulz CyberAir 3PRO",
-				ShortDescription:   "Прецизионный кондиционер (CRAC) для охлаждения серверного зала дата-центра.",
+				ShortDescription:   "Прецизионный кондиционер для охлаждения серверного зала дата-центра с регулируемой производительностью вентиляторов.",
 				Status:             StatusDeleted,
-				ImageURL:           mediaBaseURL + "crac.jpg",
-				VideoURL:           mediaBaseURL + "hdd-storage-vertical.webm",
+				ImageURL:           equipmentMediaBaseURL + "crac.jpg",
+				VideoURL:           equipmentMediaBaseURL + "fan-cooling-vertical.webm",
 				PowerConsumptionW:  15000,
 				HeatDissipationBTU: 51180,
 				LikeUserIDs:        []int64{401, 402, 403, 404},
@@ -94,9 +94,9 @@ func NewRepository() (*Repository, error) {
 	}, nil
 }
 
-func (r *Repository) GetDevices(minPowerW int) ([]Device, error) {
-	var result []Device
-	for _, d := range r.devices {
+func (r *DatacenterDeviceRepository) ListPublishedDevices(minPowerW int) ([]DatacenterDevice, error) {
+	var result []DatacenterDevice
+	for _, d := range r.datacenterDevices {
 		if d.Status != StatusPublished {
 			continue
 		}
@@ -108,18 +108,18 @@ func (r *Repository) GetDevices(minPowerW int) ([]Device, error) {
 	return result, nil
 }
 
-func (r *Repository) GetDevice(id int) (Device, error) {
-	for _, d := range r.devices {
+func (r *DatacenterDeviceRepository) GetDeviceByID(id int) (DatacenterDevice, error) {
+	for _, d := range r.datacenterDevices {
 		if d.ID == id && d.Status != StatusDeleted {
 			return d, nil
 		}
 	}
-	return Device{}, fmt.Errorf("устройство с id %d не найдено", id)
+	return DatacenterDevice{}, fmt.Errorf("устройство дата-центра с id %d не найдено", id)
 }
 
-func (r *Repository) GetNextDevice(afterID int) (Device, error) {
+func (r *DatacenterDeviceRepository) GetNextPublishedDevice(afterID int) (DatacenterDevice, error) {
 	found := false
-	for _, d := range r.devices {
+	for _, d := range r.datacenterDevices {
 		if found && d.Status == StatusPublished {
 			return d, nil
 		}
@@ -128,30 +128,40 @@ func (r *Repository) GetNextDevice(afterID int) (Device, error) {
 		}
 	}
 	if !found {
-		return Device{}, fmt.Errorf("устройство с id %d не найдено", afterID)
+		return DatacenterDevice{}, fmt.Errorf("устройство дата-центра с id %d не найдено", afterID)
 	}
-	for _, d := range r.devices {
+	for _, d := range r.datacenterDevices {
 		if d.Status == StatusPublished {
 			return d, nil
 		}
 	}
-	return Device{}, errors.New("нет опубликованных устройств")
+	return DatacenterDevice{}, errors.New("нет опубликованных устройств дата-центра")
 }
 
-func (r *Repository) GetDraft() (Device, error) {
-	for _, d := range r.devices {
+func (r *DatacenterDeviceRepository) GetDraftDevice() (DatacenterDevice, error) {
+	for _, d := range r.datacenterDevices {
 		if d.Status == StatusDraft {
 			return d, nil
 		}
 	}
-	return Device{}, errors.New("черновик устройства не найден")
+	return DatacenterDevice{}, errors.New("черновик устройства дата-центра не найден")
 }
 
-func (r *Repository) GetFirstPublishedID() int {
-	for _, d := range r.devices {
+func (r *DatacenterDeviceRepository) FirstPublishedDeviceID() int {
+	for _, d := range r.datacenterDevices {
 		if d.Status == StatusPublished {
 			return d.ID
 		}
 	}
 	return 0
+}
+
+func (r *DatacenterDeviceRepository) MaxPowerConsumptionW() int {
+	maxPower := 0
+	for _, d := range r.datacenterDevices {
+		if d.Status == StatusPublished && d.PowerConsumptionW > maxPower {
+			maxPower = d.PowerConsumptionW
+		}
+	}
+	return maxPower
 }
