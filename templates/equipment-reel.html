@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{if .equipment}}{{.equipment.Name}}{{else}}Лента{{end}} — Оборудование ЦОД</title>
-    <link rel="stylesheet" href="/static/styles/dc-base.css">
-    <link rel="stylesheet" href="/static/styles/equipment-reel.css">
+    <link rel="stylesheet" href="/styles/dc-base.css">
+    <link rel="stylesheet" href="/styles/equipment-reel.css">
 </head>
 <body>
 <div class="dc-screen">
@@ -18,7 +18,12 @@
         <p class="dc-empty">{{.error}}</p>
         {{else}}
         <div class="reel-stage">
-            <video src="{{.equipment.VideoURL}}" autoplay loop muted playsinline></video>
+            <video autoplay loop muted playsinline poster="/img/default-device.jpg">
+                {{with .equipment.VideoURL.String}}
+                <source src="{{.}}">
+                {{end}}
+                <source src="/video/default-device.webm" type="video/webm">
+            </video>
 
             <aside class="reel-side">
                 <div class="reel-action reel-action--like">
@@ -29,11 +34,11 @@
                 <div class="reel-specs">
                     <div class="reel-spec">
                         <span class="reel-spec__label">Мощность</span>
-                        <span class="reel-spec__value">{{.equipment.PowerConsumptionW}} Вт</span>
+                        <span class="reel-spec__value">{{.equipment.PowerConsumptionW.Int32}} Вт</span>
                     </div>
                     <div class="reel-spec">
                         <span class="reel-spec__label">Тепло&shy;выделение</span>
-                        <span class="reel-spec__value">{{.equipment.HeatDissipationBTU}} БТЕ/ч</span>
+                        <span class="reel-spec__value">{{.equipment.HeatDissipationBTU.Int32}} БТЕ/ч</span>
                     </div>
                 </div>
 
@@ -47,7 +52,7 @@
                 <h1>{{.equipment.Name}}</h1>
                 <details class="reel-about">
                     <summary>
-                        <span class="reel-about__text">{{.equipment.ShortDescription}}</span>
+                        <span class="reel-about__text">{{.equipment.ShortDescription.String}}</span>
                         <span class="reel-about__toggle"></span>
                     </summary>
                 </details>

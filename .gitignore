@@ -1,6 +1,9 @@
 # Локальные секреты
 .env
 
+# Наполнение БД
+db/seed.sql
+
 # Бинарники Go
 /datacenter-power
 

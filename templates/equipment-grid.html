@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Оборудование ЦОД — Плитка</title>
-    <link rel="stylesheet" href="/static/styles/dc-base.css">
-    <link rel="stylesheet" href="/static/styles/equipment-grid.css">
+    <link rel="stylesheet" href="/styles/dc-base.css">
+    <link rel="stylesheet" href="/styles/equipment-grid.css">
 </head>
 <body>
 <div class="dc-screen">
@@ -30,16 +30,29 @@
         {{if .equipmentList}}
         <div class="equipment-grid">
             {{range .equipmentList}}
-            <a class="equipment-card" href="/dc-equipment/reel/{{.ID}}">
-                <img src="{{.ImageURL}}" alt="{{.Name}}">
-                <div class="info">
-                    <div class="name">{{.Name}}</div>
-                    <div class="meta">
-                        <span>❤ {{.LikesCount}}</span>
-                        <span class="power">{{.PowerConsumptionW}} Вт</span>
+            <div class="equipment-card">
+                <a class="equipment-card__link" href="/dc-equipment/reel/{{.ID}}">
+                    {{with .ImageURL.String}}
+                    <object class="equipment-card__media" data="{{.}}" type="image/jpeg">
+                        <img src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
+                    </object>
+                    {{else}}
+                    <img class="equipment-card__media" src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
+                    {{end}}
+                    <div class="info">
+                        <div class="name">{{.Name}}</div>
+                        <div class="meta">
+                            <span>❤ {{index $.likesCounts .ID}}</span>
+                            <span class="power">{{.PowerConsumptionW.Int32}} Вт</span>
+                        </div>
                     </div>
-                </div>
-            </a>
+                </a>
+                <form class="equipment-card__delete" action="/dc-equipment/delete" method="POST">
+                    <input type="hidden" name="device_id" value="{{.ID}}">
+                    <input type="hidden" name="power" value="{{$.powerFilterW}}">
+                    <button type="submit" title="Удалить устройство" aria-label="Удалить устройство">🗑</button>
+                </form>
+            </div>
             {{end}}
         </div>
         {{else}}

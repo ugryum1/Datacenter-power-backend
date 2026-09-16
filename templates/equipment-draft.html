@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавление оборудования ЦОД</title>
-    <link rel="stylesheet" href="/static/styles/dc-base.css">
-    <link rel="stylesheet" href="/static/styles/equipment-draft.css">
+    <link rel="stylesheet" href="/styles/dc-base.css">
+    <link rel="stylesheet" href="/styles/equipment-draft.css">
 </head>
 <body>
 <div class="dc-screen">
@@ -14,49 +14,84 @@
     </header>
 
     <div class="dc-screen-body">
-        <section class="draft-section">
-            <h2>Медиафайлы устройства</h2>
-            <div class="draft-media">
-                <img src="{{.equipment.ImageURL}}" alt="{{.equipment.Name}}">
-                <div class="draft-media__actions">
-                    <button type="button" class="draft-upload">
-                        <span class="icon">🖼</span>
-                        Добавить фото
-                    </button>
-                    <button type="button" class="draft-upload">
-                        <span class="icon">🎬</span>
-                        Добавить видео
-                    </button>
+        {{if .equipment}}
+        <form class="draft-form" action="/dc-equipment/draft/publish" method="POST">
+            {{template "draftmedia" .equipment}}
+
+            <section class="draft-section">
+                <h2>Название и описание</h2>
+                <div class="draft-field">
+                    <label for="draft-name">Название устройства</label>
+                    <input id="draft-name" type="text" name="name" maxlength="100" required value="{{.equipment.Name}}">
                 </div>
-            </div>
-        </section>
+                <div class="draft-field">
+                    <label for="draft-description">Краткое описание</label>
+                    <textarea id="draft-description" name="short_description" rows="5" maxlength="500" required>{{.equipment.ShortDescription.String}}</textarea>
+                </div>
+            </section>
 
-        <section class="draft-section">
-            <h2>Название и описание</h2>
-            <div class="draft-field">
-                <label for="draft-name">Название устройства</label>
-                <input id="draft-name" type="text" name="name" value="{{.equipment.Name}}">
-            </div>
-            <div class="draft-field">
-                <label for="draft-description">Краткое описание</label>
-                <textarea id="draft-description" name="short_description" rows="5">{{.equipment.ShortDescription}}</textarea>
-            </div>
-        </section>
+            <section class="draft-section">
+                <h2>Энергопотребление устройства</h2>
+                <div class="draft-field">
+                    <label for="draft-power">Потребляемая мощность, Вт</label>
+                    <input id="draft-power" type="number" name="power" min="1" step="1" required value="{{if .equipment.PowerConsumptionW.Valid}}{{.equipment.PowerConsumptionW.Int32}}{{end}}">
+                </div>
+                <div class="draft-field">
+                    <label for="draft-heat">Тепловыделение, БТЕ/ч</label>
+                    <input id="draft-heat" type="number" name="heat" min="1" step="1" required value="{{if .equipment.HeatDissipationBTU.Valid}}{{.equipment.HeatDissipationBTU.Int32}}{{end}}">
+                </div>
+            </section>
 
-        <section class="draft-section">
-            <h2>Энергопотребление устройства</h2>
-            <div class="draft-field">
-                <label for="draft-power">Потребляемая мощность, Вт</label>
-                <input id="draft-power" type="number" name="power" value="{{.equipment.PowerConsumptionW}}">
-            </div>
-            <div class="draft-field">
-                <label for="draft-heat">Тепловыделение, БТЕ/ч</label>
-                <input id="draft-heat" type="number" name="heat" value="{{.equipment.HeatDissipationBTU}}">
-            </div>
-        </section>
+            <button type="submit" class="draft-submit">Опубликовать</button>
+        </form>
+        {{else}}
+        <form class="draft-form" action="/dc-equipment/draft" method="POST">
+            <section class="draft-section">
+                <h2>Название устройства</h2>
+                <div class="draft-field">
+                    <label for="draft-name">Название устройства</label>
+                    <input id="draft-name" type="text" name="name" maxlength="100" required>
+                </div>
+            </section>
+
+            {{template "draftmedia" .equipment}}
+
+            <button type="submit" class="draft-submit">Далее</button>
+        </form>
+        {{end}}
     </div>
 
     {{template "dcnav" .}}
 </div>
 </body>
 </html>
+
+{{define "draftmedia"}}
+<section class="draft-section">
+    <h2>Медиафайлы устройства</h2>
+    <div class="draft-media">
+        {{$imageURL := ""}}{{if .}}{{$imageURL = .ImageURL.String}}{{end}}
+        {{if $imageURL}}
+        <object class="draft-media__preview" data="{{$imageURL}}" type="image/jpeg">
+            <img src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
+        </object>
+        {{else}}
+        <img class="draft-media__preview" src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
+        {{end}}
+        <div class="draft-media__actions">
+            <label class="draft-upload">
+                <input type="file" accept="image/*" {{if not .}}required{{end}}>
+                <span class="icon">🖼</span>
+                <span class="draft-upload__text">Добавить фото</span>
+                <span class="draft-upload__done">Фото выбрано</span>
+            </label>
+            <label class="draft-upload">
+                <input type="file" accept="video/*" {{if not .}}required{{end}}>
+                <span class="icon">🎬</span>
+                <span class="draft-upload__text">Добавить видео</span>
+                <span class="draft-upload__done">Видео выбрано</span>
+            </label>
+        </div>
+    </div>
+</section>
+{{end}}
