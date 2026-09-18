@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{if .equipment}}{{.equipment.Name}}{{else}}Лента{{end}} — Оборудование ЦОД</title>
-    <link rel="stylesheet" href="/styles/dc-base.css">
+    <link rel="stylesheet" href="/styles/datacenter-base.css">
     <link rel="stylesheet" href="/styles/equipment-reel.css">
 </head>
 <body>
-<div class="dc-screen">
-    <header class="dc-topbar">
+<div class="datacenter-screen">
+    <header class="datacenter-topbar">
         <span>ЦОД · Лента оборудования</span>
     </header>
 
-    <div class="dc-screen-body">
+    <div class="datacenter-screen-body">
         {{if .error}}
-        <p class="dc-empty">{{.error}}</p>
+        <p class="datacenter-empty">{{.error}}</p>
         {{else}}
         <div class="reel-stage">
             <video autoplay loop muted playsinline poster="/img/default-device.jpg">
@@ -42,7 +42,7 @@
                     </div>
                 </div>
 
-                <a class="reel-action reel-action--next" href="/dc-equipment/reel/{{.equipment.ID}}?next=true">
+                <a class="reel-action reel-action--next" href="/datacenter-equipment/reel/{{.equipment.ID}}?next=true">
                     <span class="reel-action__circle"><span class="arrow">▼</span></span>
                     <span class="reel-action__label">Дальше</span>
                 </a>
@@ -61,7 +61,7 @@
         {{end}}
     </div>
 
-    {{template "dcnav" .}}
+    {{template "datacenternav" .}}
 </div>
 </body>
 </html>

@@ -119,7 +119,7 @@ func (h *Handler) CreateDatacenterDeviceDraft(ctx *gin.Context) {
 		}
 	}
 
-	ctx.Redirect(http.StatusFound, "/dc-equipment/draft")
+	ctx.Redirect(http.StatusFound, "/datacenter-equipment/draft")
 }
 
 func (h *Handler) PublishDatacenterDeviceDraft(ctx *gin.Context) {
@@ -146,7 +146,7 @@ func (h *Handler) PublishDatacenterDeviceDraft(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Redirect(http.StatusFound, fmt.Sprintf("/dc-equipment/reel/%d", deviceID))
+	ctx.Redirect(http.StatusFound, fmt.Sprintf("/datacenter-equipment/reel/%d", deviceID))
 }
 
 func (h *Handler) DeleteDatacenterDevice(ctx *gin.Context) {
@@ -162,9 +162,9 @@ func (h *Handler) DeleteDatacenterDevice(ctx *gin.Context) {
 		return
 	}
 
-	redirectURL := "/dc-equipment"
+	redirectURL := "/datacenter-equipment"
 	if powerFilterW, err := strconv.Atoi(ctx.PostForm("power")); err == nil && powerFilterW > 0 {
-		redirectURL = fmt.Sprintf("/dc-equipment?power=%d", powerFilterW)
+		redirectURL = fmt.Sprintf("/datacenter-equipment?power=%d", powerFilterW)
 	}
 	ctx.Redirect(http.StatusFound, redirectURL)
 }

@@ -24,7 +24,7 @@ body {
   color: var(--color-text);
 }
 
-.dc-screen {
+.datacenter-screen {
   max-width: 430px;
   margin: 0 auto;
   height: 100vh;
@@ -34,7 +34,7 @@ body {
   overflow: hidden;
 }
 
-.dc-screen-body {
+.datacenter-screen-body {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -42,26 +42,26 @@ body {
   overflow-y: auto;
 }
 
-.dc-topbar {
+.datacenter-topbar {
   flex: none;
   padding: 16px;
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
 
-.dc-topbar span {
+.datacenter-topbar span {
   font-weight: 700;
   font-size: 16px;
   color: var(--color-primary-dark);
 }
 
-.dc-empty {
+.datacenter-empty {
   padding: 24px 16px;
   text-align: center;
   color: var(--color-text-muted);
 }
 
-.dc-tabbar {
+.datacenter-tabbar {
   flex: none;
   display: flex;
   justify-content: space-around;
@@ -71,7 +71,7 @@ body {
   padding: 10px 0;
 }
 
-.dc-tabbar a {
+.datacenter-tabbar a {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -82,10 +82,10 @@ body {
   font-weight: 500;
 }
 
-.dc-tabbar a .icon {
+.datacenter-tabbar a .icon {
   font-size: 18px;
 }
 
-.dc-tabbar a.active {
+.datacenter-tabbar a.active {
   color: var(--color-primary);
 }

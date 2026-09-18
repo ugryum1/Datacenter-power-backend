@@ -131,16 +131,22 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
-  background: rgba(13, 20, 36, 0.55);
-  font-size: 15px;
-  line-height: 1;
+  border: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: #FF4D57;
   cursor: pointer;
-  transition: background .15s ease, transform .15s ease;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.equipment-card__delete svg {
+  width: 16px;
+  height: 16px;
 }
 
 .equipment-card__delete button:hover {
   background: #FF4D57;
+  color: #fff;
   transform: scale(1.06);
 }
 

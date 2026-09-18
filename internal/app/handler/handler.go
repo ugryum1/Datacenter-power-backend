@@ -18,12 +18,12 @@ func NewHandler(r *repository.Repository) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/dc-equipment", h.GetDatacenterDevices)
-	router.GET("/dc-equipment/reel/:id", h.GetDatacenterDevice)
-	router.GET("/dc-equipment/draft", h.GetDatacenterDeviceDraft)
-	router.POST("/dc-equipment/draft", h.CreateDatacenterDeviceDraft)
-	router.POST("/dc-equipment/draft/publish", h.PublishDatacenterDeviceDraft)
-	router.POST("/dc-equipment/delete", h.DeleteDatacenterDevice)
+	router.GET("/datacenter-equipment", h.GetDatacenterDevices)
+	router.GET("/datacenter-equipment/reel/:id", h.GetDatacenterDevice)
+	router.GET("/datacenter-equipment/draft", h.GetDatacenterDeviceDraft)
+	router.POST("/datacenter-equipment/draft", h.CreateDatacenterDeviceDraft)
+	router.POST("/datacenter-equipment/draft/publish", h.PublishDatacenterDeviceDraft)
+	router.POST("/datacenter-equipment/delete", h.DeleteDatacenterDevice)
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {

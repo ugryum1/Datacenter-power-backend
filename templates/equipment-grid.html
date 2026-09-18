@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Оборудование ЦОД — Плитка</title>
-    <link rel="stylesheet" href="/styles/dc-base.css">
+    <link rel="stylesheet" href="/styles/datacenter-base.css">
     <link rel="stylesheet" href="/styles/equipment-grid.css">
 </head>
 <body>
-<div class="dc-screen">
-    <header class="dc-topbar">
+<div class="datacenter-screen">
+    <header class="datacenter-topbar">
         <span>ЦОД · Учёт оборудования</span>
     </header>
 
-    <div class="dc-screen-body">
-        <form class="power-filter" action="/dc-equipment" method="GET">
+    <div class="datacenter-screen-body">
+        <form class="power-filter" action="/datacenter-equipment" method="GET">
             <div class="power-filter__head">
                 <span>Мощность от</span>
                 <b>{{.powerFilterW}} Вт</b>
@@ -31,7 +31,7 @@
         <div class="equipment-grid">
             {{range .equipmentList}}
             <div class="equipment-card">
-                <a class="equipment-card__link" href="/dc-equipment/reel/{{.ID}}">
+                <a class="equipment-card__link" href="/datacenter-equipment/reel/{{.ID}}">
                     {{with .ImageURL.String}}
                     <object class="equipment-card__media" data="{{.}}" type="image/jpeg">
                         <img src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
@@ -47,20 +47,24 @@
                         </div>
                     </div>
                 </a>
-                <form class="equipment-card__delete" action="/dc-equipment/delete" method="POST">
+                <form class="equipment-card__delete" action="/datacenter-equipment/delete" method="POST">
                     <input type="hidden" name="device_id" value="{{.ID}}">
                     <input type="hidden" name="power" value="{{$.powerFilterW}}">
-                    <button type="submit" title="Удалить устройство" aria-label="Удалить устройство">🗑</button>
+                    <button type="submit" title="Удалить устройство" aria-label="Удалить устройство">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
                 </form>
             </div>
             {{end}}
         </div>
         {{else}}
-        <p class="dc-empty">Оборудование не найдено</p>
+        <p class="datacenter-empty">Оборудование не найдено</p>
         {{end}}
     </div>
 
-    {{template "dcnav" .}}
+    {{template "datacenternav" .}}
 </div>
 </body>
 </html>

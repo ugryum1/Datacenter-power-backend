@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавление оборудования ЦОД</title>
-    <link rel="stylesheet" href="/styles/dc-base.css">
+    <link rel="stylesheet" href="/styles/datacenter-base.css">
     <link rel="stylesheet" href="/styles/equipment-draft.css">
 </head>
 <body>
-<div class="dc-screen">
-    <header class="dc-topbar">
+<div class="datacenter-screen">
+    <header class="datacenter-topbar">
         <span>ЦОД · Черновик оборудования</span>
     </header>
 
-    <div class="dc-screen-body">
+    <div class="datacenter-screen-body">
         {{if .equipment}}
-        <form class="draft-form" action="/dc-equipment/draft/publish" method="POST">
+        <form class="draft-form" action="/datacenter-equipment/draft/publish" method="POST">
             {{template "draftmedia" .equipment}}
 
             <section class="draft-section">
@@ -45,7 +45,7 @@
             <button type="submit" class="draft-submit">Опубликовать</button>
         </form>
         {{else}}
-        <form class="draft-form" action="/dc-equipment/draft" method="POST">
+        <form class="draft-form" action="/datacenter-equipment/draft" method="POST">
             <section class="draft-section">
                 <h2>Название устройства</h2>
                 <div class="draft-field">
@@ -61,7 +61,7 @@
         {{end}}
     </div>
 
-    {{template "dcnav" .}}
+    {{template "datacenternav" .}}
 </div>
 </body>
 </html>
@@ -70,27 +70,40 @@
 <section class="draft-section">
     <h2>Медиафайлы устройства</h2>
     <div class="draft-media">
-        {{$imageURL := ""}}{{if .}}{{$imageURL = .ImageURL.String}}{{end}}
-        {{if $imageURL}}
-        <object class="draft-media__preview" data="{{$imageURL}}" type="image/jpeg">
-            <img src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
-        </object>
-        {{else}}
-        <img class="draft-media__preview" src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
-        {{end}}
-        <div class="draft-media__actions">
+        <div class="draft-media__item">
+            {{$imageURL := ""}}{{if .}}{{$imageURL = .ImageURL.String}}{{end}}
+            {{if $imageURL}}
+            <object class="draft-media__preview" data="{{$imageURL}}" type="image/jpeg">
+                <img src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
+            </object>
+            {{else}}
+            <img class="draft-media__preview" src="/img/default-device.jpg" alt="Фото устройства по умолчанию">
+            {{end}}
+            {{if not .}}
             <label class="draft-upload">
-                <input type="file" accept="image/*" {{if not .}}required{{end}}>
+                <input type="file" accept="image/*" required>
                 <span class="icon">🖼</span>
                 <span class="draft-upload__text">Добавить фото</span>
                 <span class="draft-upload__done">Фото выбрано</span>
             </label>
+            {{end}}
+        </div>
+        <div class="draft-media__item">
+            {{$videoURL := ""}}{{if .}}{{$videoURL = .VideoURL.String}}{{end}}
+            <video class="draft-media__preview" autoplay loop muted playsinline poster="/img/default-device.jpg">
+                {{if $videoURL}}
+                <source src="{{$videoURL}}">
+                {{end}}
+                <source src="/video/default-device.webm" type="video/webm">
+            </video>
+            {{if not .}}
             <label class="draft-upload">
-                <input type="file" accept="video/*" {{if not .}}required{{end}}>
+                <input type="file" accept="video/*" required>
                 <span class="icon">🎬</span>
                 <span class="draft-upload__text">Добавить видео</span>
                 <span class="draft-upload__done">Видео выбрано</span>
             </label>
+            {{end}}
         </div>
     </div>
 </section>
