@@ -18,25 +18,23 @@ func NewHandler(r *repository.Repository) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/datacenter-equipment", h.GetDatacenterDevices)
-	router.GET("/datacenter-equipment/reel/:id", h.GetDatacenterDevice)
-	router.GET("/datacenter-equipment/draft", h.GetDatacenterDeviceDraft)
-	router.POST("/datacenter-equipment/draft", h.CreateDatacenterDeviceDraft)
-	router.POST("/datacenter-equipment/draft/publish", h.PublishDatacenterDeviceDraft)
-	router.POST("/datacenter-equipment/delete", h.DeleteDatacenterDevice)
-}
+	api := router.Group("/api")
 
-func (h *Handler) RegisterStatic(router *gin.Engine) {
-	router.LoadHTMLGlob("templates/*")
-	router.Static("/styles", "./resources/styles")
-	router.Static("/img", "./resources/img")
-	router.Static("/video", "./resources/video")
+	api.GET("/datacenter-equipment", h.GetDatacenterDevices)
+	api.GET("/datacenter-equipment/reel", h.GetDatacenterDeviceReel)
+	api.GET("/datacenter-equipment/reel/:id", h.GetDatacenterDeviceReel)
+	api.GET("/datacenter-equipment/draft", h.GetDatacenterDeviceDraft)
+	api.POST("/datacenter-equipment", h.CreateDatacenterDevice)
+	api.PUT("/datacenter-equipment/:id/publish", h.PublishDatacenterDevice)
+	api.DELETE("/datacenter-equipment/:id", h.DeleteDatacenterDevice)
+	api.POST("/datacenter-equipment/:id/like", h.LikeDatacenterDevice)
+
+	api.POST("/datacenter-engineers/sign-up", h.SignUpDatacenterEngineer)
+	api.POST("/datacenter-engineers/sign-in", h.SignInDatacenterEngineer)
+	api.POST("/datacenter-engineers/sign-out", h.SignOutDatacenterEngineer)
 }
 
 func (h *Handler) errorHandler(ctx *gin.Context, errorStatusCode int, err error) {
 	logrus.Error(err.Error())
-	ctx.JSON(errorStatusCode, gin.H{
-		"status":      "error",
-		"description": err.Error(),
-	})
+	ctx.AbortWithStatus(errorStatusCode)
 }

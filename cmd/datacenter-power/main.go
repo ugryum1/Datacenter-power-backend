@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
@@ -20,7 +22,13 @@ func main() {
 
 	postgresString := dsn.FromEnv()
 
-	rep, errRep := repository.New(postgresString)
+	rep, errRep := repository.New(&repository.RepositorySettings{
+		PostgresDSN:     postgresString,
+		MinioEndpoint:   os.Getenv("MINIO_ENDPOINT"),
+		MinioAccessKey:  os.Getenv("MINIO_ROOT_USER"),
+		MinioSecretKey:  os.Getenv("MINIO_ROOT_PASSWORD"),
+		MinioBucketName: os.Getenv("MINIO_BUCKET"),
+	})
 	if errRep != nil {
 		logrus.Fatalf("error initializing repository: %v", errRep)
 	}

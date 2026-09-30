@@ -1,12 +1,16 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"time"
 
+	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"datacenter-power/internal/app/ds"
 )
@@ -36,6 +40,17 @@ func (r *Repository) SearchPublishedDatacenterDevicesByPower(
 	return devices, nil
 }
 
+func (r *Repository) GetFirstPublishedDatacenterDevice() (ds.DatacenterDevice, error) {
+	device := ds.DatacenterDevice{}
+	err := r.db.Where("status = ?", ds.DatacenterDeviceStatusPublished).
+		Order("id").
+		First(&device).Error
+	if err != nil {
+		return ds.DatacenterDevice{}, err
+	}
+	return device, nil
+}
+
 func (r *Repository) GetPublishedDatacenterDeviceByID(id int) (ds.DatacenterDevice, error) {
 	device := ds.DatacenterDevice{}
 	err := r.db.Where("id = ? AND status = ?", id, ds.DatacenterDeviceStatusPublished).
@@ -52,39 +67,12 @@ func (r *Repository) GetNextPublishedDatacenterDevice(afterID int) (ds.Datacente
 		Order("id").
 		First(&device).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = r.db.Where("status = ?", ds.DatacenterDeviceStatusPublished).
-			Order("id").
-			First(&device).Error
+		return r.GetFirstPublishedDatacenterDevice()
 	}
 	if err != nil {
 		return ds.DatacenterDevice{}, err
 	}
 	return device, nil
-}
-
-func (r *Repository) GetFirstPublishedDatacenterDeviceID() uint {
-	var deviceID uint
-	err := r.db.Model(&ds.DatacenterDevice{}).
-		Where("status = ?", ds.DatacenterDeviceStatusPublished).
-		Order("id").
-		Select("id").
-		First(&deviceID).Error
-	if err != nil {
-		return 0
-	}
-	return deviceID
-}
-
-func (r *Repository) GetMaxPublishedPowerConsumptionW() int {
-	var maxPowerW int
-	err := r.db.Model(&ds.DatacenterDevice{}).
-		Where("status = ?", ds.DatacenterDeviceStatusPublished).
-		Select("COALESCE(MAX(power_consumption_w), 0)").
-		Scan(&maxPowerW).Error
-	if err != nil {
-		return 0
-	}
-	return maxPowerW
 }
 
 func (r *Repository) GetDatacenterDeviceLikesCount(deviceID uint) (int64, error) {
@@ -119,15 +107,12 @@ func (r *Repository) GetDatacenterDevicesLikesCounts(deviceIDs []uint) (map[uint
 	return likesCounts, nil
 }
 
-func (r *Repository) GetDatacenterDeviceDraft(creatorID uint) (*ds.DatacenterDevice, error) {
-	device := &ds.DatacenterDevice{}
+func (r *Repository) GetDatacenterDeviceDraft(creatorID uint) (ds.DatacenterDevice, error) {
+	device := ds.DatacenterDevice{}
 	err := r.db.Where("creator_id = ? AND status = ?", creatorID, ds.DatacenterDeviceStatusDraft).
-		First(device).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
+		First(&device).Error
 	if err != nil {
-		return nil, err
+		return ds.DatacenterDevice{}, err
 	}
 	return device, nil
 }
@@ -135,7 +120,7 @@ func (r *Repository) GetDatacenterDeviceDraft(creatorID uint) (*ds.DatacenterDev
 func (r *Repository) CreateDatacenterDeviceDraft(
 	creatorID uint,
 	name string,
-) (*ds.DatacenterDevice, error) {
+) (ds.DatacenterDevice, error) {
 	device := ds.DatacenterDevice{
 		Name:       name,
 		Status:     ds.DatacenterDeviceStatusDraft,
@@ -144,48 +129,113 @@ func (r *Repository) CreateDatacenterDeviceDraft(
 	}
 	err := r.db.Create(&device).Error
 	if err != nil {
-		return nil, err
+		return ds.DatacenterDevice{}, err
 	}
-	return &device, nil
+	return device, nil
 }
 
-func (r *Repository) PublishDatacenterDeviceDraft(creatorID uint,
-	name,
-	shortDescription string,
-	powerConsumptionW,
-	heatDissipationBTU int,
-) (uint, error) {
-	device, err := r.GetDatacenterDeviceDraft(creatorID)
-	if err != nil {
-		return 0, err
-	}
-	if device == nil {
-		return 0, errors.New("черновик устройства дата-центра не найден")
-	}
-
-	err = r.db.Model(device).Updates(ds.DatacenterDevice{
-		Name:               name,
-		ShortDescription:   sql.NullString{String: shortDescription, Valid: true},
-		Status:             ds.DatacenterDeviceStatusPublished,
-		PowerConsumptionW:  sql.NullInt32{Int32: int32(powerConsumptionW), Valid: true},
-		HeatDissipationBTU: sql.NullInt32{Int32: int32(heatDissipationBTU), Valid: true},
-		DateForm:           sql.NullTime{Time: time.Now(), Valid: true},
-	}).Error
-	if err != nil {
-		return 0, err
-	}
-	return device.ID, nil
+type DatacenterMediaFile struct {
+	Header      *multipart.FileHeader
+	ContentType string
+	Filename    string
 }
 
-func (r *Repository) DeleteDatacenterDevice(deviceID uint) error {
-	query := "UPDATE datacenter_devices SET status = $1 WHERE id = $2 RETURNING id"
-
-	row := r.db.Raw(query, ds.DatacenterDeviceStatusDeleted, deviceID).Row()
-
-	var deletedID uint
-	err := row.Scan(&deletedID)
+func (r *Repository) AddDatacenterDeviceMedia(
+	device *ds.DatacenterDevice,
+	image DatacenterMediaFile,
+	video DatacenterMediaFile,
+) error {
+	imageURL, err := r.putDatacenterMediaObject(image)
 	if err != nil {
-		return fmt.Errorf("ошибка при удалении устройства дата-центра с id %d: %w", deviceID, err)
+		return err
+	}
+	videoURL, err := r.putDatacenterMediaObject(video)
+	if err != nil {
+		return err
+	}
+
+	device.ImageURL = sql.NullString{String: imageURL, Valid: true}
+	device.VideoURL = sql.NullString{String: videoURL, Valid: true}
+	return r.db.Model(device).
+		Select("image_url", "video_url").
+		Updates(device).Error
+}
+
+func (r *Repository) putDatacenterMediaObject(media DatacenterMediaFile) (string, error) {
+	file, err := media.Header.Open()
+	if err != nil {
+		return "", fmt.Errorf("ошибка открытия файла: %w", err)
+	}
+	defer file.Close()
+
+	_, err = r.minio.PutObject(
+		context.Background(),
+		r.minio_bucket_name,
+		media.Filename,
+		file,
+		media.Header.Size,
+		minio.PutObjectOptions{
+			ContentType: media.ContentType,
+		})
+	if err != nil {
+		return "", fmt.Errorf("не удалось добавить объект в хранилище minio: %w", err)
+	}
+
+	return fmt.Sprintf(
+		"http://%s/%s/%s",
+		r.minio_endpoint, r.minio_bucket_name, media.Filename,
+	), nil
+}
+
+func (r *Repository) PublishDatacenterDevice(
+	deviceID int,
+	creatorID uint,
+	request ds.DatacenterDevicePublishRequest,
+) error {
+	result := r.db.Model(&ds.DatacenterDevice{}).
+		Where(
+			"id = ? AND creator_id = ? AND status = ?",
+			deviceID, creatorID, ds.DatacenterDeviceStatusDraft,
+		).
+		Updates(ds.DatacenterDevice{
+			Name:               request.Name,
+			ShortDescription:   sql.NullString{String: request.ShortDescription, Valid: true},
+			Status:             ds.DatacenterDeviceStatusPublished,
+			PowerConsumptionW:  sql.NullInt32{Int32: request.PowerConsumptionW, Valid: true},
+			HeatDissipationBTU: sql.NullInt32{Int32: request.HeatDissipationBTU, Valid: true},
+			DateForm:           sql.NullTime{Time: time.Now(), Valid: true},
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *Repository) DeleteDatacenterDevice(deviceID int, creatorID uint) error {
+	result := r.db.Model(&ds.DatacenterDevice{}).
+		Where(
+			"id = ? AND creator_id = ? AND status = ?",
+			deviceID, creatorID, ds.DatacenterDeviceStatusPublished,
+		).
+		Update("status", ds.DatacenterDeviceStatusDeleted)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *Repository) LikeDatacenterDevice(engineerID uint, deviceID uint) error {
+	return r.db.Clauses(clause.OnConflict{DoNothing: true}).
+		Create(&ds.DatacenterDeviceLike{EngineerID: engineerID, DeviceID: deviceID}).Error
+}
+
+func (r *Repository) UnlikeDatacenterDevice(engineerID uint, deviceID uint) error {
+	return r.db.Where("engineer_id = ? AND device_id = ?", engineerID, deviceID).
+		Delete(&ds.DatacenterDeviceLike{}).Error
 }
