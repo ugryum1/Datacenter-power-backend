@@ -29,8 +29,8 @@
 | Метод | URL | Тело/параметры | Ответ |
 |---|---|---|---|
 | GET | `/datacenter-equipment` | `?power=N`: если > 0, мощность от N Вт | 200, массив опубликованных устройств; у каждого дополнительно `is_creator`: 1, если его создал текущий инженер, иначе 0 |
-| GET | `/datacenter-equipment/reel` | — | 200, первое опубликованное устройство |
-| GET | `/datacenter-equipment/reel/:id` | `?next=true`: следующее после id, после последнего снова первое | 200, устройство; 404 |
+| GET | `/datacenter-equipment/reel` | — | 200, первое опубликованное устройство с `is_creator` |
+| GET | `/datacenter-equipment/reel/:id` | `?next=true`: следующее после id, после последнего снова первое | 200, устройство с `is_creator`; 404 |
 | GET | `/datacenter-equipment/draft` | — | 200, черновик текущего инженера; 404, если нет |
 | POST | `/datacenter-equipment` | form-data: `name`, `image` (jpeg/png/webp), `video` (webm/mp4) | 201, устройство; 400, если черновик уже есть или данные некорректны |
 | PUT | `/datacenter-equipment/:id/publish` | JSON, все обязательны: `name`, `short_description`, `power_consumption_w`, `heat_dissipation_btu` | 200, устройство; 404, если не черновик текущего инженера |

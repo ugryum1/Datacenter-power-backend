@@ -50,11 +50,11 @@ func (h *Handler) GetDatacenterDevices(ctx *gin.Context) {
 		return
 	}
 
-	serializers := make([]ds.DatacenterDeviceListSerializer, 0, len(devices))
+	serializers := make([]ds.DatacenterDeviceCardSerializer, 0, len(devices))
 	for _, device := range devices {
 		serializers = append(
 			serializers,
-			ds.NewDatacenterDeviceListSerializer(
+			ds.NewDatacenterDeviceCardSerializer(
 				device,
 				likesCounts[device.ID],
 				CurrentEngineerID(),
@@ -88,7 +88,16 @@ func (h *Handler) GetDatacenterDeviceReel(ctx *gin.Context) {
 		return
 	}
 
-	h.respondDatacenterDevice(ctx, http.StatusOK, device)
+	likesCount, err := h.Repository.GetDatacenterDeviceLikesCount(device.ID)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(
+		http.StatusOK,
+		ds.NewDatacenterDeviceCardSerializer(device, likesCount, CurrentEngineerID()),
+	)
 }
 
 func (h *Handler) GetDatacenterDeviceDraft(ctx *gin.Context) {

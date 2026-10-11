@@ -38,7 +38,7 @@ type DatacenterDeviceSerializer struct {
 	LikesCount         int64   `json:"likes_count"`
 }
 
-type DatacenterDeviceListSerializer struct {
+type DatacenterDeviceCardSerializer struct {
 	DatacenterDeviceSerializer
 	IsCreator int `json:"is_creator"`
 }
@@ -81,12 +81,12 @@ func NewDatacenterDeviceSerializer(
 	return serializer
 }
 
-func NewDatacenterDeviceListSerializer(
+func NewDatacenterDeviceCardSerializer(
 	device DatacenterDevice,
 	likesCount int64,
 	currentEngineerID uint,
-) DatacenterDeviceListSerializer {
-	serializer := DatacenterDeviceListSerializer{
+) DatacenterDeviceCardSerializer {
+	serializer := DatacenterDeviceCardSerializer{
 		DatacenterDeviceSerializer: NewDatacenterDeviceSerializer(device, likesCount),
 	}
 	if device.CreatorID == currentEngineerID {
