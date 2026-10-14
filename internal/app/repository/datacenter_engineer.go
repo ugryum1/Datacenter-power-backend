@@ -16,3 +16,12 @@ func (r *Repository) DatacenterEngineerLoginExists(login string) (bool, error) {
 func (r *Repository) CreateDatacenterEngineer(engineer *ds.DatacenterEngineer) error {
 	return r.db.Create(engineer).Error
 }
+
+func (r *Repository) GetDatacenterEngineerByLogin(login string) (ds.DatacenterEngineer, error) {
+	engineer := ds.DatacenterEngineer{}
+	err := r.db.Where("login = ?", login).First(&engineer).Error
+	if err != nil {
+		return ds.DatacenterEngineer{}, err
+	}
+	return engineer, nil
+}

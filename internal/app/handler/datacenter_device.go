@@ -25,6 +25,15 @@ var datacenterVideoExtensions = map[string]string{
 	"video/mp4":  ".mp4",
 }
 
+// GetDatacenterDevices godoc
+//
+//	@Summary		Список опубликованных устройств
+//	@Description	is_creator = 1, если устройство создал авторизованный инженер
+//	@Tags			datacenter-equipment
+//	@Produce		json
+//	@Param			power	query	int	false	"Мощность от, Вт"
+//	@Success		200		{array}	ds.DatacenterDeviceCardSerializer
+//	@Router			/datacenter-equipment [get]
 func (h *Handler) GetDatacenterDevices(ctx *gin.Context) {
 	var devices []ds.DatacenterDevice
 	var err error
@@ -57,7 +66,7 @@ func (h *Handler) GetDatacenterDevices(ctx *gin.Context) {
 			ds.NewDatacenterDeviceCardSerializer(
 				device,
 				likesCounts[device.ID],
-				CurrentEngineerID(),
+				CurrentEngineerID(ctx),
 			),
 		)
 	}
@@ -65,43 +74,69 @@ func (h *Handler) GetDatacenterDevices(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, serializers)
 }
 
+// GetDatacenterDeviceReel godoc
+//
+//	@Summary	Первое устройство ленты
+//	@Tags		datacenter-equipment
+//	@Produce	json
+//	@Success	200	{object}	ds.DatacenterDeviceCardSerializer
+//	@Failure	404
+//	@Router		/datacenter-equipment/reel [get]
 func (h *Handler) GetDatacenterDeviceReel(ctx *gin.Context) {
-	var device ds.DatacenterDevice
-	var err error
+	device, err := h.Repository.GetFirstPublishedDatacenterDevice()
+	if err != nil {
+		h.repositoryErrorHandler(ctx, err)
+		return
+	}
 
-	if ctx.Param("id") == "" {
-		device, err = h.Repository.GetFirstPublishedDatacenterDevice()
+	h.respondDatacenterDeviceCard(ctx, device)
+}
+
+// GetDatacenterDeviceReelByID godoc
+//
+//	@Summary		Устройство ленты по id
+//	@Description	При next=true возвращается следующее устройство после id
+//	@Tags			datacenter-equipment
+//	@Produce		json
+//	@Param			id		path		int		true	"id устройства"
+//	@Param			next	query		string	false	"true — следующее устройство"
+//	@Success		200		{object}	ds.DatacenterDeviceCardSerializer
+//	@Failure		400
+//	@Failure		404
+//	@Router			/datacenter-equipment/reel/{id} [get]
+func (h *Handler) GetDatacenterDeviceReelByID(ctx *gin.Context) {
+	var device ds.DatacenterDevice
+
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+	if ctx.Query("next") == "true" {
+		device, err = h.Repository.GetNextPublishedDatacenterDevice(id)
 	} else {
-		id, errID := strconv.Atoi(ctx.Param("id"))
-		if errID != nil {
-			h.errorHandler(ctx, http.StatusBadRequest, errID)
-			return
-		}
-		if ctx.Query("next") == "true" {
-			device, err = h.Repository.GetNextPublishedDatacenterDevice(id)
-		} else {
-			device, err = h.Repository.GetPublishedDatacenterDeviceByID(id)
-		}
+		device, err = h.Repository.GetPublishedDatacenterDeviceByID(id)
 	}
 	if err != nil {
 		h.repositoryErrorHandler(ctx, err)
 		return
 	}
 
-	likesCount, err := h.Repository.GetDatacenterDeviceLikesCount(device.ID)
-	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
-		return
-	}
-
-	ctx.JSON(
-		http.StatusOK,
-		ds.NewDatacenterDeviceCardSerializer(device, likesCount, CurrentEngineerID()),
-	)
+	h.respondDatacenterDeviceCard(ctx, device)
 }
 
+// GetDatacenterDeviceDraft godoc
+//
+//	@Summary	Черновик устройства текущего инженера
+//	@Tags		datacenter-equipment
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Success	200	{object}	ds.DatacenterDeviceSerializer
+//	@Failure	403
+//	@Failure	404
+//	@Router		/datacenter-equipment/draft [get]
 func (h *Handler) GetDatacenterDeviceDraft(ctx *gin.Context) {
-	draftDevice, err := h.Repository.GetDatacenterDeviceDraft(CurrentEngineerID())
+	draftDevice, err := h.Repository.GetDatacenterDeviceDraft(CurrentEngineerID(ctx))
 	if err != nil {
 		h.repositoryErrorHandler(ctx, err)
 		return
@@ -110,6 +145,21 @@ func (h *Handler) GetDatacenterDeviceDraft(ctx *gin.Context) {
 	h.respondDatacenterDevice(ctx, http.StatusOK, draftDevice)
 }
 
+// CreateDatacenterDevice godoc
+//
+//	@Summary		Добавление устройства с фото и видео
+//	@Description	Создаёт черновик текущего инженера, файлы сохраняются в MinIO
+//	@Tags			datacenter-equipment
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			name	formData	string	true	"Название устройства"
+//	@Param			image	formData	file	true	"Фото (jpeg, png, webp)"
+//	@Param			video	formData	file	true	"Видео (webm, mp4)"
+//	@Success		201		{object}	ds.DatacenterDeviceSerializer
+//	@Failure		400
+//	@Failure		403
+//	@Router			/datacenter-equipment [post]
 func (h *Handler) CreateDatacenterDevice(ctx *gin.Context) {
 	err := ctx.Request.ParseMultipartForm(2 << 20)
 	if err != nil {
@@ -117,7 +167,7 @@ func (h *Handler) CreateDatacenterDevice(ctx *gin.Context) {
 		return
 	}
 
-	_, err = h.Repository.GetDatacenterDeviceDraft(CurrentEngineerID())
+	_, err = h.Repository.GetDatacenterDeviceDraft(CurrentEngineerID(ctx))
 	if err == nil {
 		h.errorHandler(ctx, http.StatusBadRequest, errors.New("черновик устройства уже существует"))
 		return
@@ -161,7 +211,7 @@ func (h *Handler) CreateDatacenterDevice(ctx *gin.Context) {
 		return
 	}
 
-	device, err := h.Repository.CreateDatacenterDeviceDraft(CurrentEngineerID(), name)
+	device, err := h.Repository.CreateDatacenterDeviceDraft(CurrentEngineerID(ctx), name)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
@@ -188,6 +238,20 @@ func (h *Handler) CreateDatacenterDevice(ctx *gin.Context) {
 	h.respondDatacenterDevice(ctx, http.StatusCreated, device)
 }
 
+// PublishDatacenterDevice godoc
+//
+//	@Summary	Публикация черновика устройства
+//	@Tags		datacenter-equipment
+//	@Accept		json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id		path		int									true	"id черновика"
+//	@Param		request	body		ds.DatacenterDevicePublishRequest	true	"Поля устройства"
+//	@Success	200		{object}	ds.DatacenterDeviceSerializer
+//	@Failure	400
+//	@Failure	403
+//	@Failure	404
+//	@Router		/datacenter-equipment/{id}/publish [put]
 func (h *Handler) PublishDatacenterDevice(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -201,7 +265,7 @@ func (h *Handler) PublishDatacenterDevice(ctx *gin.Context) {
 		return
 	}
 
-	err = h.Repository.PublishDatacenterDevice(id, CurrentEngineerID(), request)
+	err = h.Repository.PublishDatacenterDevice(id, CurrentEngineerID(ctx), request)
 	if err != nil {
 		h.repositoryErrorHandler(ctx, err)
 		return
@@ -216,6 +280,17 @@ func (h *Handler) PublishDatacenterDevice(ctx *gin.Context) {
 	h.respondDatacenterDevice(ctx, http.StatusOK, device)
 }
 
+// DeleteDatacenterDevice godoc
+//
+//	@Summary	Логическое удаление устройства текущего инженера
+//	@Tags		datacenter-equipment
+//	@Security	BearerAuth
+//	@Param		id	path	int	true	"id устройства"
+//	@Success	200
+//	@Failure	400
+//	@Failure	403
+//	@Failure	404
+//	@Router		/datacenter-equipment/{id} [delete]
 func (h *Handler) DeleteDatacenterDevice(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -223,7 +298,7 @@ func (h *Handler) DeleteDatacenterDevice(ctx *gin.Context) {
 		return
 	}
 
-	err = h.Repository.DeleteDatacenterDevice(id, CurrentEngineerID())
+	err = h.Repository.DeleteDatacenterDevice(id, CurrentEngineerID(ctx))
 	if err != nil {
 		h.repositoryErrorHandler(ctx, err)
 		return
@@ -232,6 +307,21 @@ func (h *Handler) DeleteDatacenterDevice(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+// LikeDatacenterDevice godoc
+//
+//	@Summary		Лайк устройства от текущего инженера
+//	@Description	like = 1 ставит лайк, like = 0 снимает
+//	@Tags			datacenter-equipment
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int								true	"id устройства"
+//	@Param			request	body		ds.DatacenterDeviceLikeRequest	true	"Лайк"
+//	@Success		200		{object}	ds.DatacenterDeviceSerializer
+//	@Failure		400
+//	@Failure		403
+//	@Failure		404
+//	@Router			/datacenter-equipment/{id}/like [post]
 func (h *Handler) LikeDatacenterDevice(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -252,9 +342,9 @@ func (h *Handler) LikeDatacenterDevice(ctx *gin.Context) {
 	}
 
 	if *request.Like == 1 {
-		err = h.Repository.LikeDatacenterDevice(CurrentEngineerID(), device.ID)
+		err = h.Repository.LikeDatacenterDevice(CurrentEngineerID(ctx), device.ID)
 	} else {
-		err = h.Repository.UnlikeDatacenterDevice(CurrentEngineerID(), device.ID)
+		err = h.Repository.UnlikeDatacenterDevice(CurrentEngineerID(ctx), device.ID)
 	}
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
@@ -276,6 +366,19 @@ func (h *Handler) respondDatacenterDevice(
 	}
 
 	ctx.JSON(statusCode, ds.NewDatacenterDeviceSerializer(device, likesCount))
+}
+
+func (h *Handler) respondDatacenterDeviceCard(ctx *gin.Context, device ds.DatacenterDevice) {
+	likesCount, err := h.Repository.GetDatacenterDeviceLikesCount(device.ID)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(
+		http.StatusOK,
+		ds.NewDatacenterDeviceCardSerializer(device, likesCount, CurrentEngineerID(ctx)),
+	)
 }
 
 func (h *Handler) repositoryErrorHandler(ctx *gin.Context, err error) {

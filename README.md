@@ -4,10 +4,7 @@
 
 ## API
 
-Запуск: `docker compose up -d`, `go run ./cmd/migrate`, `go run ./cmd/datacenter-power`. Все методы под `http://localhost:8080/api`.
-
-- При ошибке тело пустое, код `400` или `404`. Незаполненные поля приходят как `null`.
-- Текущий инженер пока задан на бэкенде константой (id = 1).
+Запуск: `docker compose up -d`, `go run ./cmd/migrate`, `go run ./cmd/datacenter-power`. Все методы под `http://localhost:8080/api`. Swagger: `http://localhost:8080/swagger/index.html`.
 
 Тело ответа «устройство»:
 
@@ -42,8 +39,8 @@
 | Метод | URL | Тело/параметры | Ответ |
 |---|---|---|---|
 | POST | `/datacenter-engineers/sign-up` | JSON `{login, password}` | 201, `{id, login, is_moderator}`; 400, если логин занят |
-| POST | `/datacenter-engineers/sign-in` | — (заглушка) | 200 без тела |
-| POST | `/datacenter-engineers/sign-out` | — (заглушка) | 200 без тела |
+| POST | `/datacenter-engineers/sign-in` | JSON `{login, password}` | 200, `{expires_in, access_token, token_type}`; 403 при неверном логине или пароле |
+| POST | `/datacenter-engineers/sign-out` | — | 200 без тела, токен попадает в блеклист Redis |
 
 ## Таблицы БД
 
@@ -69,7 +66,7 @@
 |---|---|---|
 | `id` | bigint | первичный ключ |
 | `login` | varchar(25) | логин, уникальный |
-| `password` | varchar(100) | пароль |
+| `password` | varchar(100) | SHA-1 хэш пароля |
 | `is_moderator` | boolean | признак модератора |
 
 ### datacenter_device_likes — лайки
