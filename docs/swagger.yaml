@@ -47,6 +47,29 @@ definitions:
     - power_consumption_w
     - short_description
     type: object
+  ds.DatacenterDeviceReelSerializer:
+    properties:
+      heat_dissipation_btu:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_creator:
+        type: integer
+      is_liked:
+        type: integer
+      likes_count:
+        type: integer
+      name:
+        type: string
+      power_consumption_w:
+        type: integer
+      short_description:
+        type: string
+      video_url:
+        type: string
+    type: object
   ds.DatacenterDeviceSerializer:
     properties:
       heat_dissipation_btu:
@@ -111,6 +134,217 @@ info:
   title: Datacenter Power API
   version: "1.0"
 paths:
+  /datacenter-devices:
+    get:
+      description: is_creator = 1, если устройство создал авторизованный инженер
+      parameters:
+      - description: Мощность от, Вт
+        in: query
+        name: power
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ds.DatacenterDeviceCardSerializer'
+            type: array
+      summary: Список опубликованных устройств
+      tags:
+      - datacenter-devices
+    post:
+      consumes:
+      - multipart/form-data
+      description: Создаёт черновик текущего инженера, файлы сохраняются в MinIO
+      parameters:
+      - description: Название устройства
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Фото (jpeg, png, webp)
+        in: formData
+        name: image
+        required: true
+        type: file
+      - description: Видео (webm, mp4)
+        in: formData
+        name: video
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+      security:
+      - BearerAuth: []
+      summary: Добавление устройства с фото и видео
+      tags:
+      - datacenter-devices
+  /datacenter-devices/{id}:
+    delete:
+      parameters:
+      - description: id устройства
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Логическое удаление устройства текущего инженера
+      tags:
+      - datacenter-devices
+  /datacenter-devices/{id}/like:
+    post:
+      consumes:
+      - application/json
+      description: like = 1 ставит лайк, like = 0 снимает
+      parameters:
+      - description: id устройства
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Лайк
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ds.DatacenterDeviceLikeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Лайк устройства от текущего инженера
+      tags:
+      - datacenter-devices
+  /datacenter-devices/{id}/publish:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: id черновика
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля устройства
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ds.DatacenterDevicePublishRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Публикация черновика устройства
+      tags:
+      - datacenter-devices
+  /datacenter-devices/draft:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - BearerAuth: []
+      summary: Черновик устройства текущего инженера
+      tags:
+      - datacenter-devices
+  /datacenter-devices/reel:
+    get:
+      description: |-
+        is_creator = 1, если устройство создал авторизованный инженер,
+        is_liked = 1, если он его лайкнул
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.DatacenterDeviceReelSerializer'
+        "404":
+          description: Not Found
+      summary: Первое устройство ленты
+      tags:
+      - datacenter-devices
+  /datacenter-devices/reel/{id}:
+    get:
+      description: |-
+        При next=true возвращается следующее устройство после id,
+        is_creator и is_liked как у первого устройства ленты
+      parameters:
+      - description: id устройства
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: true — следующее устройство
+        in: query
+        name: next
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.DatacenterDeviceReelSerializer'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+      summary: Устройство ленты по id
+      tags:
+      - datacenter-devices
   /datacenter-engineers/sign-in:
     post:
       consumes:
@@ -173,212 +407,6 @@ paths:
       summary: Регистрация инженера
       tags:
       - datacenter-engineers
-  /datacenter-equipment:
-    get:
-      description: is_creator = 1, если устройство создал авторизованный инженер
-      parameters:
-      - description: Мощность от, Вт
-        in: query
-        name: power
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/ds.DatacenterDeviceCardSerializer'
-            type: array
-      summary: Список опубликованных устройств
-      tags:
-      - datacenter-equipment
-    post:
-      consumes:
-      - multipart/form-data
-      description: Создаёт черновик текущего инженера, файлы сохраняются в MinIO
-      parameters:
-      - description: Название устройства
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: Фото (jpeg, png, webp)
-        in: formData
-        name: image
-        required: true
-        type: file
-      - description: Видео (webm, mp4)
-        in: formData
-        name: video
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-      security:
-      - BearerAuth: []
-      summary: Добавление устройства с фото и видео
-      tags:
-      - datacenter-equipment
-  /datacenter-equipment/{id}:
-    delete:
-      parameters:
-      - description: id устройства
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-      security:
-      - BearerAuth: []
-      summary: Логическое удаление устройства текущего инженера
-      tags:
-      - datacenter-equipment
-  /datacenter-equipment/{id}/like:
-    post:
-      consumes:
-      - application/json
-      description: like = 1 ставит лайк, like = 0 снимает
-      parameters:
-      - description: id устройства
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Лайк
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/ds.DatacenterDeviceLikeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-      security:
-      - BearerAuth: []
-      summary: Лайк устройства от текущего инженера
-      tags:
-      - datacenter-equipment
-  /datacenter-equipment/{id}/publish:
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: id черновика
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Поля устройства
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/ds.DatacenterDevicePublishRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-      security:
-      - BearerAuth: []
-      summary: Публикация черновика устройства
-      tags:
-      - datacenter-equipment
-  /datacenter-equipment/draft:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ds.DatacenterDeviceSerializer'
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-      security:
-      - BearerAuth: []
-      summary: Черновик устройства текущего инженера
-      tags:
-      - datacenter-equipment
-  /datacenter-equipment/reel:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ds.DatacenterDeviceCardSerializer'
-        "404":
-          description: Not Found
-      summary: Первое устройство ленты
-      tags:
-      - datacenter-equipment
-  /datacenter-equipment/reel/{id}:
-    get:
-      description: При next=true возвращается следующее устройство после id
-      parameters:
-      - description: id устройства
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: true — следующее устройство
-        in: query
-        name: next
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ds.DatacenterDeviceCardSerializer'
-        "400":
-          description: Bad Request
-        "404":
-          description: Not Found
-      summary: Устройство ленты по id
-      tags:
-      - datacenter-equipment
 schemes:
 - http
 securityDefinitions:

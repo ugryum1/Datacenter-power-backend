@@ -86,6 +86,20 @@ func (r *Repository) GetDatacenterDeviceLikesCount(deviceID uint) (int64, error)
 	return count, nil
 }
 
+func (r *Repository) IsDatacenterDeviceLikedByEngineer(
+	deviceID uint,
+	engineerID uint,
+) (bool, error) {
+	var count int64
+	err := r.db.Model(&ds.DatacenterDeviceLike{}).
+		Where("device_id = ? AND engineer_id = ?", deviceID, engineerID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *Repository) GetDatacenterDevicesLikesCounts(deviceIDs []uint) (map[uint]int64, error) {
 	var rows []struct {
 		DeviceID   uint

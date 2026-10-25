@@ -43,6 +43,11 @@ type DatacenterDeviceCardSerializer struct {
 	IsCreator int `json:"is_creator"`
 }
 
+type DatacenterDeviceReelSerializer struct {
+	DatacenterDeviceCardSerializer
+	IsLiked int `json:"is_liked"`
+}
+
 type DatacenterDevicePublishRequest struct {
 	Name               string `json:"name" binding:"required"`
 	ShortDescription   string `json:"short_description" binding:"required"`
@@ -91,6 +96,25 @@ func NewDatacenterDeviceCardSerializer(
 	}
 	if device.CreatorID == currentEngineerID {
 		serializer.IsCreator = 1
+	}
+	return serializer
+}
+
+func NewDatacenterDeviceReelSerializer(
+	device DatacenterDevice,
+	likesCount int64,
+	currentEngineerID uint,
+	isLiked bool,
+) DatacenterDeviceReelSerializer {
+	serializer := DatacenterDeviceReelSerializer{
+		DatacenterDeviceCardSerializer: NewDatacenterDeviceCardSerializer(
+			device,
+			likesCount,
+			currentEngineerID,
+		),
+	}
+	if isLiked {
+		serializer.IsLiked = 1
 	}
 	return serializer
 }

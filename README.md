@@ -25,14 +25,14 @@
 
 | Метод | URL | Тело/параметры | Ответ |
 |---|---|---|---|
-| GET | `/datacenter-equipment` | `?power=N`: если > 0, мощность от N Вт | 200, массив опубликованных устройств; у каждого дополнительно `is_creator`: 1, если его создал текущий инженер, иначе 0 |
-| GET | `/datacenter-equipment/reel` | — | 200, первое опубликованное устройство с `is_creator` |
-| GET | `/datacenter-equipment/reel/:id` | `?next=true`: следующее после id, после последнего снова первое | 200, устройство с `is_creator`; 404 |
-| GET | `/datacenter-equipment/draft` | — | 200, черновик текущего инженера; 404, если нет |
-| POST | `/datacenter-equipment` | form-data: `name`, `image` (jpeg/png/webp), `video` (webm/mp4) | 201, устройство; 400, если черновик уже есть или данные некорректны |
-| PUT | `/datacenter-equipment/:id/publish` | JSON, все обязательны: `name`, `short_description`, `power_consumption_w`, `heat_dissipation_btu` | 200, устройство; 404, если не черновик текущего инженера |
-| DELETE | `/datacenter-equipment/:id` | — (логическое удаление опубликованного устройства текущего инженера) | 200 без тела; 404, если устройство чужое или не опубликовано |
-| POST | `/datacenter-equipment/:id/like` | JSON `{"like": 1}` ставит, `{"like": 0}` снимает | 200, устройство; 404, если не опубликовано |
+| GET | `/datacenter-devices` | `?power=N`: если > 0, мощность от N Вт | 200, массив опубликованных устройств; у каждого дополнительно `is_creator`: 1, если его создал текущий инженер, иначе 0 |
+| GET | `/datacenter-devices/reel` | — | 200, первое опубликованное устройство с `is_creator` и `is_liked`: 1, если текущий инженер лайкнул устройство, иначе 0 |
+| GET | `/datacenter-devices/reel/:id` | `?next=true`: следующее после id, после последнего снова первое | 200, устройство с `is_creator` и `is_liked`; 404 |
+| GET | `/datacenter-devices/draft` | — | 200, черновик текущего инженера; 404, если нет |
+| POST | `/datacenter-devices` | form-data: `name`, `image` (jpeg/png/webp), `video` (webm/mp4) | 201, устройство; 400, если черновик уже есть или данные некорректны |
+| PUT | `/datacenter-devices/:id/publish` | JSON, все обязательны: `name`, `short_description`, `power_consumption_w`, `heat_dissipation_btu` | 200, устройство; 404, если не черновик текущего инженера |
+| DELETE | `/datacenter-devices/:id` | — (логическое удаление опубликованного устройства текущего инженера) | 200 без тела; 404, если устройство чужое или не опубликовано |
+| POST | `/datacenter-devices/:id/like` | JSON `{"like": 1}` ставит, `{"like": 0}` снимает | 200, устройство; 404, если не опубликовано |
 
 ### Инженеры
 
